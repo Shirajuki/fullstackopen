@@ -1,0 +1,33 @@
+https://www.websequencediagrams.com/
+```
+
+browser->server: HTTP GET https://studies.cs.helsinki.fi/exampleapp/notes
+server-->browser: HTML-code
+browser->server: HTTP GET https://studies.cs.helsinki.fi/exampleapp/main.css
+server-->browser: main.css
+browser->server: HTTP GET https://studies.cs.helsinki.fi/exampleapp/spa.js
+server-->browser: spa.js
+
+note over browser:
+browser starts executing js-code
+that requests JSON data from server 
+end note
+
+browser->server: HTTP GET https://studies.cs.helsinki.fi/exampleapp/data.json
+server-->browser: data.json
+
+note over browser:
+browser executes the event handler
+that renders notes to display
+end note
+
+browser->server: HTTP POST https://studies.cs.helsinki.fi/exampleapp/new_note_spa
+server-->browser: 201 Created
+
+note over browser:
+recieves 201 status code, the if condition in
+the js-code is valid and the browser executes
+function to redraw notes locally, rendering
+notes to display
+end note
+```

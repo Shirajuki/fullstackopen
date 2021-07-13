@@ -13,5 +13,9 @@ const update = (id, newObject) => {
   return axios.put(`${baseUrl}/${id}`, newObject);
 };
 
-const service = { getAll, create, update };
+const deleteEntry = (id) => {
+  return axios.delete(`${baseUrl}/${id}`);
+};
+
+const service = { getAll, create, update, deleteEntry };
 export default service;

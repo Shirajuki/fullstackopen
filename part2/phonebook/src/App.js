@@ -16,19 +16,52 @@ const App = () => {
     });
   }, []);
 
+  const deletePerson = (id, name) => {
+    if (window.confirm(`Delete ${name} ?`)) {
+      personService
+        .deleteEntry(id)
+        .then((_) => {
+          setPersons(persons.filter((person) => person.id !== id));
+        })
+        .catch((_) => {
+          alert(`The person '${name}' has already been deleted from server`);
+        });
+    }
+  };
   const addPersons = (event) => {
     event.preventDefault();
     const name = newName;
     const number = newNumber;
+    const personObj = { name, number };
     if (name === "" || name === undefined) {
       window.alert("Please input a valid name!");
     } else if (persons.map((person) => person.name).includes(name)) {
-      window.alert(`${name} is already added to phonebook`);
+      const person = persons.find((person) => person.name.includes(name));
+      if (person.number !== number) {
+        if (
+          window.confirm(
+            `${name} is already added to phonebook, replace old number with a new one?`
+          )
+        ) {
+          personService
+            .update(person.id, personObj)
+            .then((_) => {
+              const copy = persons.map((p) =>
+                p.id === person.id ? personObj : p
+              );
+              setPersons(copy);
+            })
+            .catch((_) => {
+              alert(
+                `The person '${name}' has already been deleted from server`
+              );
+            });
+        }
+      } else window.alert(`${name} is already added to phonebook`);
     } else {
       // Reset values
       setNewName("");
       setNewNumber("");
-      const personObj = { name, number };
       personService.create(personObj).then((res) => {
         console.log(res);
       });
@@ -49,7 +82,7 @@ const App = () => {
         setNewNumber={setNewNumber}
       />
       <h2>Numbers</h2>
-      <Persons persons={persons} filter={filter} />
+      <Persons persons={persons} filter={filter} deletePerson={deletePerson} />
     </div>
   );
 };

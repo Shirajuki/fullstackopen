@@ -3,12 +3,18 @@ import personService from "./services/persons";
 import Persons from "./components/Persons";
 import PersonForm from "./components/PersonForm";
 import Filter from "./components/Filter";
+import Notification from "./components/Notification";
+import "./index.css";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filter, setFilter] = useState("");
+  const [errorMessage, setErrorMessage] = useState({
+    message: "",
+    type: "error",
+  });
 
   useEffect(() => {
     personService.getAll().then((res) => {
@@ -22,9 +28,22 @@ const App = () => {
         .deleteEntry(id)
         .then((_) => {
           setPersons(persons.filter((person) => person.id !== id));
+          setErrorMessage({
+            message: `Successfully deleted ${name}`,
+            type: "success",
+          });
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 3000);
         })
         .catch((_) => {
-          alert(`The person '${name}' has already been deleted from server`);
+          setErrorMessage({
+            message: `The person ${name} has already been removed from the server`,
+            type: "error",
+          });
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 3000);
         });
     }
   };
@@ -52,9 +71,13 @@ const App = () => {
               setPersons(copy);
             })
             .catch((_) => {
-              alert(
-                `The person '${name}' has already been deleted from server`
-              );
+              setErrorMessage({
+                message: `The person ${name} has already been removed from the server`,
+                type: "error",
+              });
+              setTimeout(() => {
+                setErrorMessage(null);
+              }, 3000);
             });
         }
       } else window.alert(`${name} is already added to phonebook`);
@@ -67,11 +90,16 @@ const App = () => {
       });
       // Add new person to persons state
       setPersons([...persons, personObj]);
+      setErrorMessage({ message: `Added ${personObj.name}`, type: "success" });
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 3000);
     }
   };
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification error={errorMessage} />
       <Filter value={filter} setValue={setFilter} />
       <h2>add a new</h2>
       <PersonForm

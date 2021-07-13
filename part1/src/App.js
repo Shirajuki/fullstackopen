@@ -1,12 +1,20 @@
 import React from "react";
 
 const Header = (props) => <h1>{props.course}</h1>;
+const Part = (props) => (
+  <p>
+    {props.part} {props.exercises}
+  </p>
+);
+
 const Content = (props) => {
-  return props.content.map((cont) => (
-    <p>
-      {cont.part} {cont.exercises}
-    </p>
-  ));
+  return (
+    <div>
+      {props.content.map((cont, index) => (
+        <Part key={index} part={cont.part} exercises={cont.exercises} />
+      ))}
+    </div>
+  );
 };
 const Total = (props) => <p>Number of exercises {props.total}</p>;
 

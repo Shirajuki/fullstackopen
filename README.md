@@ -16,37 +16,37 @@ Taking the University of Helsinki [Full Stack Open 2021 MOOC Course](https://ful
 
 ## Course exercises
 ### Part 0 - Fundamentals of Web apps
-- TBA
+- [x] Finished
 
 ### Part 1 - Introduction to React
-- TBA
+- [x] Finished
 
 ### Part 2 - Communicating with server
-- TBA
+- [x] Finished
 
 ### Part 3 - Programming a server with NodeJS and Express
-- TBA
+- TBD
 
 ### Part 4 - Testing Express servers, user administration
-- TBA
+- TBD
 
 ### Part 5 - Testing React apps
-- TBA
+- TBD
 
 ### Part 6 - State management with Redux
-- TBA
+- TBD
 
 ### Part 7 - React router, custom hooks, styling app with CSS and webpack
-- TBA
+- TBD
 
 ### Part 8 - GraphQL
-- TBA
+- TBD
 
 ### Part 9 - Typescript
-- TBA
+- TBD
 
 ### Part 10 - React Native
-- TBA
+- TBD
 
 ### Part 11 - CI/CD
-- TBA
+- TBD

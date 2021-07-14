@@ -1,5 +1,4 @@
 const Notification = ({ error }) => {
-  console.log(error);
   if (error?.message === "" || error?.message === undefined) {
     return <></>;
   }

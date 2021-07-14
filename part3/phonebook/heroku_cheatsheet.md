@@ -1,8 +1,8 @@
 > https://blog.softup.co/how-to-deploy-a-monorepo-to-multiple-heroku-apps-using-github-actions/
 
 1. Create heroku project with given name
-$ heroku create # Creates random name
-$ heroku create jukifso-part3-phonebook --remote heroku-jukifso-part3-phonebook # Creates chosen name
+$ heroku create --region eu # Creates random name
+$ heroku create jukifso-part3-phonebook --remote heroku-jukifso-part3-phonebook --region eu # Creates chosen name
 
 2. Add buildpack for multi-procfile (this can prolly be skipped)
 $ heroku buildpacks:add -a jukifso-part3-phonebook heroku-community/multi-procfile

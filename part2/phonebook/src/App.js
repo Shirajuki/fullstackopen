@@ -85,15 +85,29 @@ const App = () => {
       // Reset values
       setNewName("");
       setNewNumber("");
-      personService.create(personObj).then((res) => {
-        console.log(res);
-      });
-      // Add new person to persons state
-      setPersons([...persons, personObj]);
-      setErrorMessage({ message: `Added ${personObj.name}`, type: "success" });
-      setTimeout(() => {
-        setErrorMessage(null);
-      }, 3000);
+      personService
+        .create(personObj)
+        .then((res) => {
+          console.log(res);
+          // Add new person to persons state
+          setPersons([...persons, personObj]);
+          setErrorMessage({
+            message: `Added ${personObj.name}`,
+            type: "success",
+          });
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 3000);
+        })
+        .catch((error) => {
+          setErrorMessage({
+            message: error.response.data,
+            type: "error",
+          });
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 3000);
+        });
     }
   };
   return (

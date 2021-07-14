@@ -1,6 +1,8 @@
+require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
+const Person = require("./models/person");
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -44,23 +46,32 @@ let persons = [
 ];
 
 app.get("/api/info", (request, response) => {
-  response.set("Content-Type", "text/html");
-  response.send(`
-		<p>Phone has info for ${persons.length} people</p>
-		<p>${new Date().toString()}</p>
-	`);
+  Person.find({}).then((persons) => {
+    response.set("Content-Type", "text/html");
+    response.send(`
+			<p>Phone has info for ${persons.length} people</p>
+			<p>${new Date().toString()}</p>
+		`);
+  });
 });
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Person.find({}).then((persons) => {
+    response.json(persons);
+  });
 });
 app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const person = persons.find((p) => p.id === id);
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
+  Person.findById(request.params.id)
+    .then((person) => {
+      if (person) {
+        response.json(person);
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      response.status(500).end();
+    });
 });
 app.delete("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
@@ -85,15 +96,15 @@ app.post("/api/persons", (request, response) => {
   else if (persons.find((p) => p.name === body.name))
     return response.status(404).json({ error: "name must be unique" });
 
-  const person = {
+  const person = new Person({
     id: generateId(),
     name: body.name,
     number: body.number,
-  };
+  });
 
-  persons = persons.concat(person);
-
-  response.json(persons);
+  person.save().then((savedPerson) => {
+    response.json(savedPerson);
+  });
 });
 
 const PORT = process.env.PORT || 3001;

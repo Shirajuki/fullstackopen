@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
+const uniqueValidator = require("mongoose-unique-validator");
 const blogSchema = new mongoose.Schema({
-  title: String,
+  title: { type: String, required: true },
   author: String,
-  url: String,
+  url: { type: String, required: true },
   likes: Number,
 });
+
 blogSchema.set("toJSON", {
   transform: (_, returnedObject) => {
     returnedObject.id = returnedObject._id.toString();
@@ -12,5 +14,6 @@ blogSchema.set("toJSON", {
     delete returnedObject.__v;
   },
 });
+blogSchema.plugin(uniqueValidator);
 const Blog = mongoose.model("Blog", blogSchema);
 module.exports = Blog;

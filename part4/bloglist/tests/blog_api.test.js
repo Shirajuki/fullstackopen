@@ -26,8 +26,8 @@ beforeEach(async () => {
     await blogObject.save();
   }
 });
+const baseUrl = "/api/blogs";
 describe("GET /api/blogs", () => {
-  const baseUrl = "/api/blogs";
   test("blogs are returned as json", async () => {
     await api
       .get(baseUrl)
@@ -43,14 +43,145 @@ describe("GET /api/blogs", () => {
   test("a specific note is within the returned notes", async () => {
     const response = await api.get(baseUrl);
 
-    const contents = response.body.map((b) => b.title);
-    expect(contents).toContain("Bob the builder - trilogy");
+    const titles = response.body.map((b) => b.title);
+    expect(titles).toContain("Bob the builder - trilogy");
   });
   test("unique identifier property of the blog posts is named id", async () => {
     const response = await api.get(baseUrl);
 
-    const contents = response.body;
-    expect(contents[0].id).toBeDefined();
+    const blogs = response.body;
+    expect(blogs[0].id).toBeDefined();
+  });
+});
+
+describe("POST /api/blogs", () => {
+  test("a valid blog can be added", async () => {
+    const newBlog = {
+      title: "Bob the builder last book",
+      author: "Bob",
+      url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
+      likes: 0,
+    };
+
+    await api
+      .post(baseUrl)
+      .send(newBlog)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    const response = await api.get(baseUrl);
+    const titles = response.body.map((b) => b.title);
+    expect(response.body).toHaveLength(initialBlogs.length + 1);
+    expect(titles).toContain("Bob the builder last book");
+  });
+  test("a valid blog can be added with missing likes property defaulting to zero", async () => {
+    const newBlog = {
+      title: "Bob the builder last book",
+      author: "Bob",
+      url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
+    };
+
+    await api
+      .post(baseUrl)
+      .send(newBlog)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    const response = await api.get(baseUrl);
+    const titles = response.body.map((b) => b.title);
+    expect(response.body).toHaveLength(initialBlogs.length + 1);
+    expect(titles).toContain("Bob the builder last book");
+    expect(response.body[initialBlogs.length].likes).toBe(0);
+  });
+  test("a valid blog can be added with missing likes property defaulting to zero", async () => {
+    const newBlog = {
+      title: "Bob the builder last book",
+      author: "Bob",
+      url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
+    };
+
+    await api
+      .post(baseUrl)
+      .send(newBlog)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    const response = await api.get(baseUrl);
+    const titles = response.body.map((b) => b.title);
+    expect(response.body).toHaveLength(initialBlogs.length + 1);
+    expect(titles).toContain("Bob the builder last book");
+    expect(response.body[initialBlogs.length].likes).toBe(0);
+  });
+  test("a blog cannot be added when property title are missing", async () => {
+    const newBlog = {
+      author: "Bob",
+      url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
+      likes: 0,
+    };
+
+    await api
+      .post(baseUrl)
+      .send(newBlog)
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
+
+    const response = await api.get(baseUrl);
+    expect(response.body).toHaveLength(initialBlogs.length);
+  });
+  test("a blog cannot be added when property url are missing", async () => {
+    const newBlog = {
+      title: "Bob the builder last book",
+      author: "Bob",
+      likes: 0,
+    };
+
+    await api
+      .post(baseUrl)
+      .send(newBlog)
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
+
+    const response = await api.get(baseUrl);
+    expect(response.body).toHaveLength(initialBlogs.length);
+  });
+});
+describe("DELETE /api/blogs/:id", () => {
+  test("a blog can be deleted", async () => {
+    const r = await api.get(baseUrl);
+    const ids = r.body.map((b) => b.id);
+
+    const id = ids[1];
+    await api.delete(`${baseUrl}/${id}`).expect(204);
+
+    const response = await api.get(baseUrl);
+    const titles = response.body.map((b) => b.title);
+    expect(response.body).toHaveLength(initialBlogs.length - 1);
+    expect(titles).not.toContain(initialBlogs[1].title);
+  });
+  test("deleting an invalid blog id does nothing", async () => {
+    const id = "asdfg";
+    await api.delete(`${baseUrl}/${id}`).expect(400);
+
+    const response = await api.get(baseUrl);
+    expect(response.body).toHaveLength(initialBlogs.length);
+  });
+});
+describe("PUT /api/blogs/:id", () => {
+  test("a blog can edited", async () => {
+    const r = await api.get(baseUrl);
+    const ids = r.body.map((b) => b.id);
+
+    const newBlog = { ...initialBlogs[1], id: ids[1], likes: 10 };
+
+    await api
+      .put(`${baseUrl}/${newBlog.id}`)
+      .send(newBlog)
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
+
+    const response = await api.get(baseUrl);
+    expect(response.body).toHaveLength(initialBlogs.length);
+    expect(response.body[1].likes).toBe(10);
   });
 });
 

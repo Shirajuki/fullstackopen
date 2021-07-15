@@ -3,24 +3,31 @@ const supertest = require("supertest");
 const app = require("../app");
 const api = supertest(app);
 const Blog = require("../models/blog");
-const initialBlogs = [
-  {
-    id: "5a422aa71b54a676234d17f8",
-    title: "Go To Statement Considered Harmful - part 1",
-    author: "Edsger W. Dijkstra",
-    url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-    likes: 1,
-  },
-  {
-    id: "5a422aa71b54a676234d17fb",
-    title: "Bob the builder - trilogy",
-    author: "Bob",
-    url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-    likes: 0,
-  },
-];
+const User = require("../models/user");
 const token =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJvYjIiLCJpZCI6IjYwZjAwZDExMmVlMTBjNmZkODdhNTY4NyIsImlhdCI6MTYyNjM0NDkxN30.47Dj3xpvzFEBvc4nBhMn4FCO1FbGXWFvXqXiw4JL3QY";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJvb3QiLCJpZCI6IjYwZjAzMTMyOTNiNzJiMmFiNzlkZTFlMCIsImlhdCI6MTYyNjM1NDEwMX0.i0CO8t4f_2Cg6SEvclMsdUtVxEQxt-NY1m75n0urf6c";
+let initialBlogs;
+beforeAll(async () => {
+  const user = await User.findOne({});
+  initialBlogs = [
+    {
+      id: "5a422aa71b54a676234d17f8",
+      title: "Go To Statement Considered Harmful - part 1",
+      author: "Edsger W. Dijkstra",
+      url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
+      likes: 1,
+      user: user._id,
+    },
+    {
+      id: "5a422aa71b54a676234d17fb",
+      title: "Bob the builder - trilogy",
+      author: "Bob",
+      url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
+      likes: 0,
+      user: user._id,
+    },
+  ];
+});
 beforeEach(async () => {
   await Blog.deleteMany({});
   for (const blog of initialBlogs) {
@@ -67,7 +74,7 @@ describe("POST /api/blogs", () => {
 
     await api
       .post(baseUrl)
-      .set({ Authorization: token })
+      .set("Authorization", `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect("Content-Type", /application\/json/);
@@ -86,7 +93,7 @@ describe("POST /api/blogs", () => {
 
     await api
       .post(baseUrl)
-      .set({ Authorization: token })
+      .set("Authorization", `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect("Content-Type", /application\/json/);
@@ -106,7 +113,7 @@ describe("POST /api/blogs", () => {
 
     await api
       .post(baseUrl)
-      .set({ Authorization: token })
+      .set("Authorization", `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect("Content-Type", /application\/json/);
@@ -126,7 +133,7 @@ describe("POST /api/blogs", () => {
 
     await api
       .post(baseUrl)
-      .set({ Authorization: token })
+      .set("Authorization", `Bearer ${token}`)
       .send(newBlog)
       .expect(400)
       .expect("Content-Type", /application\/json/);
@@ -143,7 +150,7 @@ describe("POST /api/blogs", () => {
 
     await api
       .post(baseUrl)
-      .set({ Authorization: token })
+      .set("Authorization", `Bearer ${token}`)
       .send(newBlog)
       .expect(400)
       .expect("Content-Type", /application\/json/);
@@ -160,7 +167,7 @@ describe("DELETE /api/blogs/:id", () => {
     const id = ids[1];
     await api
       .delete(`${baseUrl}/${id}`)
-      .set({ Authorization: token })
+      .set("Authorization", `Bearer ${token}`)
       .expect(204);
 
     const response = await api.get(baseUrl);
@@ -172,7 +179,7 @@ describe("DELETE /api/blogs/:id", () => {
     const id = "asdfg";
     await api
       .delete(`${baseUrl}/${id}`)
-      .set({ Authorization: token })
+      .set("Authorization", `Bearer ${token}`)
       .expect(400);
 
     const response = await api.get(baseUrl);

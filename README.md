@@ -28,7 +28,7 @@ Taking the University of Helsinki [Full Stack Open 2021 MOOC Course](https://ful
 - [x] Finished
 
 ### Part 4 - Testing Express servers, user administration
-- TBD
+- [x] Finished
 
 ### Part 5 - Testing React apps
 - TBD

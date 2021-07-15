@@ -1,12 +1,12 @@
-const http = require("http");
-const express = require("express");
-const cors = require("cors");
-const mongoose = require("mongoose");
-const app = express();
 const config = require("./utils/config");
+const express = require("express");
+require("express-async-errors");
+const app = express();
+const cors = require("cors");
+const blogsRouter = require("./controllers/blogs");
 const logger = require("./utils/logger");
 const middleware = require("./utils/middleware");
-const blogsRouter = require("./controllers/blogs");
+const mongoose = require("mongoose");
 
 mongoose
   .connect(config.MONGODB_URI, {

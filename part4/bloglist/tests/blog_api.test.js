@@ -19,6 +19,8 @@ const initialBlogs = [
     likes: 0,
   },
 ];
+const token =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJvYjIiLCJpZCI6IjYwZjAwZDExMmVlMTBjNmZkODdhNTY4NyIsImlhdCI6MTYyNjM0NDkxN30.47Dj3xpvzFEBvc4nBhMn4FCO1FbGXWFvXqXiw4JL3QY";
 beforeEach(async () => {
   await Blog.deleteMany({});
   for (const blog of initialBlogs) {
@@ -65,6 +67,7 @@ describe("POST /api/blogs", () => {
 
     await api
       .post(baseUrl)
+      .set({ Authorization: token })
       .send(newBlog)
       .expect(201)
       .expect("Content-Type", /application\/json/);
@@ -83,6 +86,7 @@ describe("POST /api/blogs", () => {
 
     await api
       .post(baseUrl)
+      .set({ Authorization: token })
       .send(newBlog)
       .expect(201)
       .expect("Content-Type", /application\/json/);
@@ -102,6 +106,7 @@ describe("POST /api/blogs", () => {
 
     await api
       .post(baseUrl)
+      .set({ Authorization: token })
       .send(newBlog)
       .expect(201)
       .expect("Content-Type", /application\/json/);
@@ -121,6 +126,7 @@ describe("POST /api/blogs", () => {
 
     await api
       .post(baseUrl)
+      .set({ Authorization: token })
       .send(newBlog)
       .expect(400)
       .expect("Content-Type", /application\/json/);
@@ -137,6 +143,7 @@ describe("POST /api/blogs", () => {
 
     await api
       .post(baseUrl)
+      .set({ Authorization: token })
       .send(newBlog)
       .expect(400)
       .expect("Content-Type", /application\/json/);
@@ -151,7 +158,10 @@ describe("DELETE /api/blogs/:id", () => {
     const ids = r.body.map((b) => b.id);
 
     const id = ids[1];
-    await api.delete(`${baseUrl}/${id}`).expect(204);
+    await api
+      .delete(`${baseUrl}/${id}`)
+      .set({ Authorization: token })
+      .expect(204);
 
     const response = await api.get(baseUrl);
     const titles = response.body.map((b) => b.title);
@@ -160,7 +170,10 @@ describe("DELETE /api/blogs/:id", () => {
   });
   test("deleting an invalid blog id does nothing", async () => {
     const id = "asdfg";
-    await api.delete(`${baseUrl}/${id}`).expect(400);
+    await api
+      .delete(`${baseUrl}/${id}`)
+      .set({ Authorization: token })
+      .expect(400);
 
     const response = await api.get(baseUrl);
     expect(response.body).toHaveLength(initialBlogs.length);

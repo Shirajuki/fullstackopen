@@ -25,3 +25,24 @@ code {
 .error {
   color: red;
 }
+
+.blog {
+  position: relative;
+  border: 1px solid black;
+  padding: 5px;
+  margin: 5px;
+}
+.blog p {
+  margin: 0;
+}
+.blog > p {
+  margin-left: 90px;
+}
+.blog > div {
+  padding-top: 5px;
+}
+.blog button:not(.btn) {
+  position: absolute;
+  top: 0;
+  left: 0;
+}

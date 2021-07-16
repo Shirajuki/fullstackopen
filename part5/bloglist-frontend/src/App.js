@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Blog from "./components/Blog";
 import Notification from "./components/Notification";
-import blogService from "./services/blogs";
+import Togglable from "./components/Toggleable";
+import BlogForm from "./components/BlogForm";
+import blogsService from "./services/blogs";
 import loginService from "./services/login";
 
-const initalBlog = {
-  title: "",
-  author: "",
-  url: "",
-};
 const validBlog = (blog) => {
   if (blog) return true;
   return false;
@@ -19,18 +16,22 @@ const App = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState();
-  const [blog, setBlog] = useState(initalBlog);
+  const blogFormRef = useRef();
 
   useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs));
+    const loadBlogs = async () => {
+      const blogs = await blogsService.getAll();
+      blogs.sort((a, b) => Number(b.likes) - Number(a.likes));
+      setBlogs(blogs);
+    };
+    loadBlogs();
   }, []);
 
   const handleLogin = async (event) => {
     event.preventDefault();
-    console.log("logging in with", username, password);
     try {
       const user = await loginService.login({ username, password });
-      blogService.setToken(user.token);
+      blogsService.setToken(user.token);
       window.localStorage.setItem("loggedBloglistUser", JSON.stringify(user));
       setUser(user);
       setUsername("");
@@ -43,25 +44,24 @@ const App = () => {
         setErrorMessage(null);
       }, 5000);
     } catch (exception) {
-      setErrorMessage({ type: "error", message: "Invalid input" });
+      setErrorMessage({ type: "error", message: "wrong credentials" });
       setTimeout(() => {
         setErrorMessage(null);
       }, 5000);
     }
   };
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (user) {
       window.localStorage.removeItem("loggedBloglistUser");
       setUser(undefined);
-      blogService.setToken(undefined);
+      blogsService.setToken(undefined);
     }
   };
-  const handleCreateBlog = async (event) => {
-    event.preventDefault();
+  const handleCreateBlog = async (blog) => {
     if (validBlog(blog)) {
       try {
-        const createdBlog = await blogService.create(blog);
-        setBlogs(blogs.concat(createdBlog));
+        const createdBlog = await blogsService.create(blog);
+        setBlogs(blogs.concat({ ...createdBlog, user: user }));
         setErrorMessage({
           type: "success",
           message: `a new blog "${createdBlog.title}" by ${createdBlog.author} added`,
@@ -75,7 +75,56 @@ const App = () => {
           setErrorMessage(null);
         }, 5000);
       }
-      setBlog(initalBlog);
+    }
+  };
+
+  const handleLike = async (blog) => {
+    const newBlog = {
+      user: blog.user?.id || "",
+      likes: blog.likes + 1,
+      author: blog.author,
+      title: blog.title,
+      url: blog.url,
+    };
+    try {
+      const updatedBlog = await blogsService.update(blog.id, newBlog);
+      const nblogs = blogs.map((b) => {
+        return b.id === updatedBlog.id ? updatedBlog : b;
+      });
+      nblogs.sort((a, b) => Number(b.likes) - Number(a.likes));
+      setBlogs(nblogs);
+      setErrorMessage({
+        type: "success",
+        message: `blog "${updatedBlog.title}" by ${updatedBlog.author} has been liked`,
+      });
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 5000);
+    } catch (exception) {
+      setErrorMessage({ type: "error", message: "Couldn't like blog" });
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 5000);
+    }
+  };
+
+  const handleDeleteBlog = async (blog) => {
+    try {
+      await blogsService.remove(blog.id);
+      const nblogs = blogs.filter((b) => b.id !== blog.id);
+      setBlogs(nblogs);
+      setErrorMessage({
+        type: "success",
+        message: `deleted blog "${blog.title}" by ${blog.author}`,
+      });
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 5000);
+    } catch (exception) {
+      setErrorMessage({ type: "error", message: "Couldn't delete blog" });
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 5000);
     }
   };
 
@@ -85,7 +134,7 @@ const App = () => {
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON);
       setUser(user);
-      blogService.setToken(user.token);
+      blogsService.setToken(user.token);
     }
   }, []);
 
@@ -99,6 +148,7 @@ const App = () => {
             <div>
               username{" "}
               <input
+                id="username"
                 type="text"
                 value={username}
                 name="Username"
@@ -108,13 +158,16 @@ const App = () => {
             <div>
               password{" "}
               <input
+                id="password"
                 type="password"
                 value={password}
                 name="Password"
                 onChange={({ target }) => setPassword(target.value)}
               />
             </div>
-            <button type="submit">login</button>
+            <button id="login-button" type="submit">
+              login
+            </button>
           </form>
         </>
       ) : (
@@ -124,46 +177,17 @@ const App = () => {
           <p>
             {user.name} logged in <button onClick={handleLogout}>logout</button>
           </p>
-          <h2>create new</h2>
-          <form onSubmit={handleCreateBlog}>
-            <div>
-              title{" "}
-              <input
-                type="text"
-                value={blog.title}
-                name="title"
-                onChange={({ target }) =>
-                  setBlog({ ...blog, title: target.value })
-                }
-              />
-            </div>
-            <div>
-              author{" "}
-              <input
-                type="text"
-                value={blog.author}
-                name="author"
-                onChange={({ target }) =>
-                  setBlog({ ...blog, author: target.value })
-                }
-              />
-            </div>
-            <div>
-              url{" "}
-              <input
-                type="text"
-                value={blog.url}
-                name="url"
-                onChange={({ target }) =>
-                  setBlog({ ...blog, url: target.value })
-                }
-              />
-            </div>
-            <button type="submit">create</button>
-          </form>
+          <Togglable buttonLabel="create new blog" ref={blogFormRef}>
+            <BlogForm createBlog={handleCreateBlog} />
+          </Togglable>
           <br />
           {blogs.map((blog) => (
-            <Blog key={blog.id} blog={blog} />
+            <Blog
+              key={blog.id}
+              blog={blog}
+              likeBlog={handleLike}
+              deleteBlog={handleDeleteBlog}
+            />
           ))}
         </>
       )}

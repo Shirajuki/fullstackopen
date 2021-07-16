@@ -1,11 +1,10 @@
 const blogsRouter = require("express").Router();
 const jwt = require("jsonwebtoken");
 const Blog = require("../models/blog");
-const User = require("../models/user");
 const userExtractor = require("../utils/middleware").userExtractor;
 
 blogsRouter.get("/", async (_, response) => {
-  const blogs = await Blog.find({});
+  const blogs = await Blog.find({}).populate("user");
   response.json(blogs);
 });
 
@@ -61,7 +60,7 @@ blogsRouter.put("/:id", async (request, response) => {
   const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, blog, {
     runValidators: true,
     new: true,
-  });
+  }).populate("user");
   response.json(updatedBlog);
 });
 module.exports = blogsRouter;

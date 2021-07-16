@@ -31,7 +31,7 @@ Taking the University of Helsinki [Full Stack Open 2021 MOOC Course](https://ful
 - [x] Finished
 
 ### Part 5 - Testing React apps
-- TBD
+- [x] Finished
 
 ### Part 6 - State management with Redux
 - TBD

@@ -34,7 +34,7 @@ Taking the University of Helsinki [Full Stack Open 2021 MOOC Course](https://ful
 - [x] Finished
 
 ### Part 6 - State management with Redux
-- TBD
+- [x] Finished
 
 ### Part 7 - React router, custom hooks, styling app with CSS and webpack
 - TBD

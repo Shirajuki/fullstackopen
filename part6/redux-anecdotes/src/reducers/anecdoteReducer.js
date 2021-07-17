@@ -1,3 +1,4 @@
+import anecdotesService from "../services/anecdotes";
 const anecdotesAtStart = [
   "If it hurts, do it more often",
   "Adding manpower to a late software project makes it later!",
@@ -24,15 +25,12 @@ const anecdoteReducer = (state = initialState, action) => {
     case "VOTE":
       const id = action.data.id;
       const nstate = state.map((anecdote) =>
-        anecdote.id === id
-          ? { ...anecdote, votes: anecdote.votes + 1 }
-          : anecdote
+        anecdote.id === id ? action.data : anecdote
       );
       nstate.sort((a, b) => b.votes - a.votes);
       return nstate;
     case "NEW_ANECDOTE":
-      const data = action.data;
-      return [...state, data];
+      return [...state, action.data];
     case "INIT_ANECDOTE":
       return action.data;
     default:
@@ -40,22 +38,32 @@ const anecdoteReducer = (state = initialState, action) => {
   }
 };
 
-export const voteAnecdote = (id) => {
-  return {
-    type: "VOTE",
-    data: { id },
+export const voteAnecdote = (id, data) => {
+  return async (dispatch) => {
+    try {
+      await anecdotesService.vote(id, data);
+      dispatch({
+        type: "VOTE",
+        data: data,
+      });
+    } catch (exception) {}
   };
 };
-export const createAnecdote = (data) => {
-  return {
-    type: "NEW_ANECDOTE",
-    data: data,
+export const createAnecdote = (content) => {
+  return async (dispatch) => {
+    dispatch({
+      type: "NEW_ANECDOTE",
+      data: asObject(content),
+    });
   };
 };
-export const initializeAnecdotes = (data) => {
-  return {
-    type: "INIT_ANECDOTE",
-    data: data,
+export const initializeAnecdotes = () => {
+  return async (dispatch) => {
+    const anecdotes = await anecdotesService.getAll();
+    dispatch({
+      type: "INIT_ANECDOTE",
+      data: anecdotes,
+    });
   };
 };
 

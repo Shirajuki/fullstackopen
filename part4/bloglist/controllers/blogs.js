@@ -35,7 +35,7 @@ blogsRouter.delete("/:id", userExtractor, async (request, response) => {
   const decodedToken = jwt.verify(token, process.env.SECRET);
   if (!token || !decodedToken.id)
     return response.status(401).json({ error: "token missing or invalid" });
-  const userId = request.user.id;
+  const userId = request?.user?.id || "";
   if (blog.user.toString() === userId.toString()) {
     await Blog.findByIdAndRemove(request.params.id);
     response.status(204).end();
@@ -45,6 +45,19 @@ blogsRouter.delete("/:id", userExtractor, async (request, response) => {
 blogsRouter.get("/:id", async (request, response) => {
   const blog = await Blog.findById(request.params.id);
   response.json(blog);
+});
+
+blogsRouter.post("/:id/comment", async (request, response) => {
+  const body = request.body;
+  if (!body.comment) response.status(403).end();
+  const updatedBlog = await Blog.findByIdAndUpdate(
+    request.params.id,
+    { $push: { comments: [body.comment] } },
+    {
+      runValidators: true,
+    }
+  ).populate("user");
+  response.json(updatedBlog);
 });
 
 blogsRouter.put("/:id", async (request, response) => {

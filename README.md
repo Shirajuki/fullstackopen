@@ -37,7 +37,7 @@ Taking the University of Helsinki [Full Stack Open 2021 MOOC Course](https://ful
 - [x] Finished
 
 ### Part 7 - React router, custom hooks, styling app with CSS and webpack
-- TBD
+- [x] Finished
 
 ### Part 8 - GraphQL
 - TBD

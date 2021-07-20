@@ -40,7 +40,7 @@ Taking the University of Helsinki [Full Stack Open 2021 MOOC Course](https://ful
 - [x] Finished
 
 ### Part 8 - GraphQL
-- TBD
+- [x] Finished
 
 ### Part 9 - Typescript
 - TBD

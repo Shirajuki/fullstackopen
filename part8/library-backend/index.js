@@ -4,6 +4,7 @@ const {
   UserInputError,
   AuthenticationError,
   gql,
+  PubSub,
 } = require("apollo-server");
 const mongoose = require("mongoose");
 const Book = require("./models/book");
@@ -11,6 +12,7 @@ const Author = require("./models/author");
 const User = require("./models/user");
 const MONGODB_URI = process.env.MONGODB_URI;
 const jwt = require("jsonwebtoken");
+const pubsub = new PubSub();
 
 const JWT_SECRET = "NEED_HERE_A_SECRET_KEY";
 console.log("connecting to", MONGODB_URI);
@@ -27,7 +29,7 @@ mongoose
   .catch((error) => {
     console.log("error connection to MongoDB:", error.message);
   });
-
+mongoose.set("debug", true);
 const typeDefs = gql`
   type Author {
     name: String!
@@ -49,6 +51,9 @@ const typeDefs = gql`
   }
   type Token {
     value: String!
+  }
+  type Subscription {
+    bookAdded: Book!
   }
   type Query {
     bookCount: Int!
@@ -75,7 +80,6 @@ const resolvers = {
     authorCount: () => Author.collection.countDocuments(),
     bookCount: () => Book.collection.countDocuments(),
     allBooks: (_, args) => {
-      console.log(args.genre);
       if (args.author && args.genre)
         return Book.find({
           author: args.author,
@@ -89,15 +93,18 @@ const resolvers = {
     },
     allAuthors: async () => {
       const authors = await Author.find({});
-      const nauthors = await Promise.all(
-        authors.map(async (a) => {
-          const bookCount = await Book.countDocuments({ author: a._id });
-          return {
-            ...a.toObject(),
-            bookCount,
-          };
-        })
-      );
+      const books = await Book.find({});
+      const nbooks = {};
+      books.forEach((b) => {
+        nbooks[b.author] = (nbooks[b.author] || 0) + 1;
+      });
+      const nauthors = authors.map(async (a) => {
+        const bookCount = nbooks[a._id];
+        return {
+          ...a.toObject(),
+          bookCount,
+        };
+      });
       return nauthors;
     },
     me: (root, args, context) => {
@@ -124,10 +131,12 @@ const resolvers = {
       }
       const book = new Book({ ...args, author: author._id });
       const nbook = await book.save();
-      return {
-        ...nbook.toObject(),
+      const createdBook = {
+        ...{ ...nbook.toObject(), id: nbook.toObject()["_id"] },
         author: { ...author.toObject(), name: args.author },
       };
+      pubsub.publish("BOOK_ADDED", { bookAdded: createdBook });
+      return createdBook;
     },
     editAuthor: async (_, args, context) => {
       if (!context.currentUser)
@@ -162,6 +171,9 @@ const resolvers = {
       return { value: jwt.sign(userForToken, JWT_SECRET) };
     },
   },
+  Subscription: {
+    bookAdded: { subscribe: () => pubsub.asyncIterator(["BOOK_ADDED"]) },
+  },
 };
 
 const server = new ApolloServer({
@@ -177,6 +189,7 @@ const server = new ApolloServer({
   },
 });
 
-server.listen().then(({ url }) => {
+server.listen().then(({ url, subscriptionsUrl }) => {
   console.log(`Server ready at ${url}`);
+  console.log(`Subscriptions ready at ${subscriptionsUrl}`);
 });

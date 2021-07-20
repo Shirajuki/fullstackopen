@@ -12,6 +12,9 @@ const NewBook = (props) => {
           ""
       );
     },
+    update: (_, response) => {
+      props.updateCacheWith(response.data.addBook);
+    },
   });
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");

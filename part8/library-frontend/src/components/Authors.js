@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ALL_AUTHORS, EDIT_AUTHOR } from "../queries";
 import { useQuery, useMutation } from "@apollo/client";
 
@@ -9,9 +9,12 @@ const Authors = (props) => {
   });
   const [name, setName] = useState("");
   const [born, setBorn] = useState("");
+  const authors = result?.data?.allAuthors || [];
+  useEffect(() => {
+    setName(authors[0]?.name || "");
+  }, [authors]);
   if (!props.show) return null;
   if (result.loading) return <div>loading...</div>;
-  const authors = result.data.allAuthors || [];
   const submit = (event) => {
     event.preventDefault();
     editAuthor({ variables: { name, born: Number(born) } });
@@ -19,6 +22,7 @@ const Authors = (props) => {
     setName("");
     setBorn("");
   };
+
   return (
     <div>
       <h2>authors</h2>
@@ -29,8 +33,8 @@ const Authors = (props) => {
             <th>born</th>
             <th>books</th>
           </tr>
-          {authors.map((a) => (
-            <tr key={a.name}>
+          {authors.map((a, index) => (
+            <tr key={a.name + index}>
               <td>{a.name}</td>
               <td>{a.born}</td>
               <td>{a.bookCount}</td>
@@ -44,7 +48,9 @@ const Authors = (props) => {
         <div>
           <select value={name} onChange={({ target }) => setName(target.value)}>
             {authors.map((a) => (
-              <option value={a.name}>{a.name}</option>
+              <option key={a.name} value={a.name}>
+                {a.name}
+              </option>
             ))}
           </select>
         </div>

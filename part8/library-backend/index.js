@@ -75,13 +75,16 @@ const resolvers = {
     authorCount: () => Author.collection.countDocuments(),
     bookCount: () => Book.collection.countDocuments(),
     allBooks: (_, args) => {
+      console.log(args.genre);
       if (args.author && args.genre)
         return Book.find({
           author: args.author,
           genres: { $all: [args.genre] },
         }).populate("author");
-      else if (args.author) return Book.find({ author: args.author });
-      else if (args.genre) return Book.find({ genres: { $all: [args.genre] } });
+      else if (args.author)
+        return Book.find({ author: args.author }).populate("author");
+      else if (args.genre)
+        return Book.find({ genres: { $all: [args.genre] } }).populate("author");
       return Book.find({}).populate("author");
     },
     allAuthors: async () => {

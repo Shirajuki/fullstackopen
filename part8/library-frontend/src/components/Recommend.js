@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from "react";
-import { ALL_BOOKS } from "../queries";
-import { useQuery } from "@apollo/client";
+import { BOOKS_BY_GENRE } from "../queries";
+import { useLazyQuery } from "@apollo/client";
 
 const Recommend = (props) => {
-  const result = useQuery(ALL_BOOKS);
+  const [getBooksByGenre, result] = useLazyQuery(BOOKS_BY_GENRE);
   const [genre, setGenre] = useState("");
-  const books = result?.data?.allBooks || [];
+  const [books, setBooks] = useState([]);
+
+  useEffect(() => {
+    if (props.token) {
+      const favoriteGenre = JSON.parse(
+        atob(props.token.split(".")[1] ?? "") || ""
+      ).favoriteGenre;
+      setGenre(favoriteGenre);
+      getBooksByGenre({ variables: { genre: favoriteGenre } });
+    }
+  }, [props.token, getBooksByGenre]);
 
   useEffect(() => {
     if (result.data) {
-      const favoriteGenre = JSON.parse(
-        atob(props?.token?.split(".")[1] ?? "")
-      ).favoriteGenre;
-      setGenre(favoriteGenre);
+      setBooks(result.data?.allBooks);
     }
   }, [result.data]); // eslint-disable-line
   if (!props.show) return null;
-  if (result.loading) return <div>loading...</div>;
   return (
     <div>
       <h2>books</h2>
@@ -28,15 +34,13 @@ const Recommend = (props) => {
             <th>author</th>
             <th>published</th>
           </tr>
-          {books
-            .filter((a) => a.genres.includes(genre) || genre === "")
-            .map((a) => (
-              <tr key={a.title}>
-                <td>{a.title}</td>
-                <td>{a.author?.name}</td>
-                <td>{a.published}</td>
-              </tr>
-            ))}
+          {books.map((a) => (
+            <tr key={a.title}>
+              <td>{a.title}</td>
+              <td>{a.author?.name}</td>
+              <td>{a.published}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

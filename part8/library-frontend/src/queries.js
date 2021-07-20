@@ -60,10 +60,17 @@ export const LOGIN = gql`
     }
   }
 `;
-/*
-export const FIND_PERSON = gql`
-  query findPersonByName($nameToSearch: String!) {
-    // ...
+export const BOOKS_BY_GENRE = gql`
+  query allBooksByGenre($genre: String) {
+    allBooks(genre: $genre) {
+      id
+      title
+      author {
+        name
+        born
+      }
+      published
+      genres
+    }
   }
 `;
-*/

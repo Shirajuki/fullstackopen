@@ -5,6 +5,13 @@ import { useMutation } from "@apollo/client";
 const NewBook = (props) => {
   const [addBook] = useMutation(ADD_BOOK, {
     refetchQueries: [{ query: ALL_AUTHORS }, { query: ALL_BOOKS }],
+    onError: (error) => {
+      props.setError(
+        error.graphQLErrors[0]?.message ||
+          error.graphQLErrors[0]?._message ||
+          ""
+      );
+    },
   });
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");

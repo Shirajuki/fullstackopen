@@ -2,16 +2,17 @@ import React, { useEffect, useState } from "react";
 import { ALL_BOOKS } from "../queries";
 import { useQuery } from "@apollo/client";
 
-const Books = (props) => {
+const Recommend = (props) => {
   const result = useQuery(ALL_BOOKS);
-  const [genres, setGenres] = useState([]);
   const [genre, setGenre] = useState("");
   const books = result?.data?.allBooks || [];
 
   useEffect(() => {
     if (result.data) {
-      const genres = [...new Set(books.map((b) => b.genres).flat())];
-      setGenres(genres);
+      const favoriteGenre = JSON.parse(
+        atob(props?.token?.split(".")[1] ?? "")
+      ).favoriteGenre;
+      setGenre(favoriteGenre);
     }
   }, [result.data]); // eslint-disable-line
   if (!props.show) return null;
@@ -38,14 +39,8 @@ const Books = (props) => {
             ))}
         </tbody>
       </table>
-      {genres.map((g, index) => (
-        <button key={g + index} onClick={() => setGenre(g)}>
-          {g}
-        </button>
-      ))}
-      <button onClick={() => setGenre("")}>all genres</button>
     </div>
   );
 };
 
-export default Books;
+export default Recommend;

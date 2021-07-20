@@ -1,8 +1,14 @@
 require("dotenv").config();
-const { ApolloServer, UserInputError, gql } = require("apollo-server");
+const {
+  ApolloServer,
+  UserInputError,
+  AuthenticationError,
+  gql,
+} = require("apollo-server");
 const mongoose = require("mongoose");
 const Book = require("./models/book");
 const Author = require("./models/author");
+const User = require("./models/user");
 const MONGODB_URI = process.env.MONGODB_URI;
 const jwt = require("jsonwebtoken");
 
@@ -97,6 +103,8 @@ const resolvers = {
   },
   Mutation: {
     addBook: async (_, args, context) => {
+      if (!context.currentUser)
+        throw new AuthenticationError("not authenticated");
       let author = await Author.findOne({ name: args.author });
       if (!author) {
         const newAuthor = new Author({ name: args.author });
@@ -112,16 +120,26 @@ const resolvers = {
         });
       }
       const book = new Book({ ...args, author: author._id });
-      return book.save();
+      const nbook = await book.save();
+      return {
+        ...nbook.toObject(),
+        author: { ...author.toObject(), name: args.author },
+      };
     },
     editAuthor: async (_, args, context) => {
+      if (!context.currentUser)
+        throw new AuthenticationError("not authenticated");
+
       const author = await Author.findOne({ name: args.name });
       if (!author) return null;
       author.born = args.setBornTo;
       return author.save();
     },
-    createUser: (_, args) => {
-      const user = new User({ username: args.username });
+    createUser: async (_, args) => {
+      const user = new User({
+        username: args.username,
+        favoriteGenre: args.favoriteGenre || "nothing",
+      });
       return user.save().catch((error) => {
         throw new UserInputError(error.message, {
           invalidArgs: args,
@@ -133,8 +151,9 @@ const resolvers = {
       if (!user || args.password !== "secret")
         throw new UserInputError("wrong credentials");
       const userForToken = {
-        username: user.username,
         id: user._id,
+        username: user.username,
+        favoriteGenre: user.favoriteGenre || "nothing",
       };
 
       return { value: jwt.sign(userForToken, JWT_SECRET) };

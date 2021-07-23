@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Container, Table, Icon } from "semantic-ui-react";
+import {
+  Header,
+  Segment,
+  Container,
+  Divider,
+  Table,
+  Icon,
+} from "semantic-ui-react";
 // import { PatientFormValues } from "../AddPatientModal/AddPatientForm";
-import { Patient } from "../types";
+import { Patient, Entry, Diagnosis } from "../types";
 import { apiBaseUrl } from "../constants";
 import HealthRatingBar from "../components/HealthRatingBar";
 import { useStateValue } from "../state";
@@ -13,11 +20,99 @@ const getGenderIcon = (gender: string): JSX.Element => {
   else if (gender === "female") return <Icon name="venus" />;
   else return <Icon name="genderless" />;
 };
+const EntryDetails: React.FC<{ entry: Entry; diagnosis: Diagnosis[] }> = ({
+  entry,
+  diagnosis,
+}) => {
+  switch (entry.type) {
+    case "Hospital":
+      return (
+        <Segment>
+          <Header as="h3">
+            {entry.date} <Icon name="user doctor" />
+          </Header>
+          <Divider />
+          <p>
+            <i>{entry.description}</i>
+          </p>
+          <ul>
+            {entry?.diagnosisCodes?.map((code: string, index: number) => (
+              <li key={index}>
+                {code}{" "}
+                {diagnosis
+                  ? (
+                      diagnosis.find((d: Diagnosis) => d.code === code) || {
+                        name: "",
+                      }
+                    ).name
+                  : ""}
+              </li>
+            ))}
+          </ul>
+        </Segment>
+      );
+    case "OccupationalHealthcare":
+      return (
+        <Segment>
+          <Header as="h3">
+            {entry.date} <Icon name="treatment" />
+          </Header>
+          <Divider />
+          <p>
+            <i>{entry.description}</i>
+          </p>
+          <ul>
+            {entry?.diagnosisCodes?.map((code: string, index: number) => (
+              <li key={index}>
+                {code}{" "}
+                {diagnosis
+                  ? (
+                      diagnosis.find((d: Diagnosis) => d.code === code) || {
+                        name: "",
+                      }
+                    ).name
+                  : ""}
+              </li>
+            ))}
+          </ul>
+        </Segment>
+      );
+    case "HealthCheck":
+      return (
+        <Segment>
+          <Header as="h3">
+            {entry.date} <Icon name="first aid" />
+          </Header>
+          <Divider />
+          <p>
+            <i>{entry.description}</i>
+          </p>
+          <ul>
+            {entry?.diagnosisCodes?.map((code: string, index: number) => (
+              <li key={index}>
+                {code}{" "}
+                {diagnosis
+                  ? (
+                      diagnosis.find((d: Diagnosis) => d.code === code) || {
+                        name: "",
+                      }
+                    ).name
+                  : ""}
+              </li>
+            ))}
+          </ul>
+        </Segment>
+      );
+    default:
+      return <></>;
+  }
+};
 const PatientPage: React.FC = () => {
   const [, dispatch] = useStateValue();
   const [error, setError] = React.useState<string | undefined>();
   const { id } = useParams<{ id: string }>();
   const [patient, setPatient] = useState<Patient>();
+  const [diagnosis, setDiagnosis] = useState<Diagnosis[]>();
 
   useEffect(() => {
     void axios.get<void>(`${apiBaseUrl}/ping`);
@@ -30,10 +125,23 @@ const PatientPage: React.FC = () => {
         setPatient(patientFromApi);
       } catch (e) {
         console.error(e);
-        setError(e);
+        setError(JSON.stringify(e));
       }
     };
     void fetchPatientList();
+
+    const fetchDiagnosis = async () => {
+      try {
+        const { data: diagnosis } = await axios.get<Diagnosis[]>(
+          `${apiBaseUrl}/diagnoses`
+        );
+        setDiagnosis(diagnosis);
+      } catch (e) {
+        console.error(e);
+        setError(JSON.stringify(e));
+      }
+    };
+    void fetchDiagnosis();
   }, [dispatch]);
 
   if (!patient) return <></>;
@@ -58,6 +166,16 @@ const PatientPage: React.FC = () => {
           </Table.Row>
         </Table.Body>
       </Table>
+      <Container>
+        <h4>entries</h4>
+        {patient.entries.map((entry: Entry) => (
+          <EntryDetails
+            key={entry.id}
+            entry={entry}
+            diagnosis={diagnosis || []}
+          />
+        ))}
+      </Container>
     </div>
   );
 };

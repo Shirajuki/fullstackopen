@@ -1,13 +1,15 @@
 import React from "react";
 import axios from "axios";
-import { BrowserRouter as Router, Route, Link, Switch } from "react-router-dom";
+import { Route, Link, Switch } from "react-router-dom";
+// import Menu from "./components/Menu";
 import { Button, Divider, Header, Container } from "semantic-ui-react";
 
 import { apiBaseUrl } from "./constants";
-import { useStateValue } from "./state";
+import { useStateValue, setPatientList } from "./state";
 import { Patient } from "./types";
 
 import PatientListPage from "./PatientListPage";
+import PatientPage from "./PatientPage";
 
 const App = () => {
   const [, dispatch] = useStateValue();
@@ -19,7 +21,7 @@ const App = () => {
         const { data: patientListFromApi } = await axios.get<Patient[]>(
           `${apiBaseUrl}/patients`
         );
-        dispatch({ type: "SET_PATIENT_LIST", payload: patientListFromApi });
+        dispatch(setPatientList(patientListFromApi));
       } catch (e) {
         console.error(e);
       }
@@ -29,20 +31,21 @@ const App = () => {
 
   return (
     <div className="App">
-      <Router>
-        <Container>
-          <Header as="h1">Patientor</Header>
-          <Button as={Link} to="/" primary>
-            Home
-          </Button>
-          <Divider hidden />
-          <Switch>
-            <Route path="/">
-              <PatientListPage />
-            </Route>
-          </Switch>
-        </Container>
-      </Router>
+      <Container>
+        <Header as="h1">Patientor</Header>
+        <Button as={Link} to="/" primary>
+          Home
+        </Button>
+        <Divider hidden />
+        <Switch>
+          <Route path="/:id">
+            <PatientPage />
+          </Route>
+          <Route path="/">
+            <PatientListPage />
+          </Route>
+        </Switch>
+      </Container>
     </div>
   );
 };

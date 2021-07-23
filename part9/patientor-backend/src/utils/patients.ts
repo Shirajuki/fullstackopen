@@ -21,6 +21,7 @@ const parsePatient = (
       dateOfBirth,
       occupation,
       gender: gender as GenderType,
+      entries: [],
     };
     return ppatient;
   }

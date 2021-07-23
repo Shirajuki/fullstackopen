@@ -47,3 +47,4 @@ Obese (Class I) 	30–35 	1.2–1.4
 Obese (Class II) 	35–40 	1.4–1.6
 Obese (Class III) 	   ≥ 40 	≥ 1.6 
 */
+export default calculateBmi;

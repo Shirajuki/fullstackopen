@@ -43,7 +43,7 @@ interface Values {
   hours: number[];
   target: number;
 }
-const parseArguments = (args: Array<string>): Values => {
+export const parseArguments = (args: Array<string>): Values => {
   if (args.length < 4) throw new Error("Not enough arguments");
   const hours = [];
   for (let i = 2; i < args.length - 1; i++) {
@@ -64,3 +64,4 @@ try {
 } catch (e) {
   console.log("Error, something bad happened, message: ", e.message);
 }
+export default calculateExercise;

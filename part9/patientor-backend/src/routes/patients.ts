@@ -1,6 +1,7 @@
 import express from "express";
 import patientsService from "../services/patientsService";
 import utils from "../utils/patients";
+import { Entry } from "../types";
 const router = express.Router();
 
 router.get("/", (_req, res) => {
@@ -25,6 +26,35 @@ router.post("/", (req, res) => {
     res.json(newPatientEntry);
   } else {
     res.status(400).json({ error: "malformatted parameters" });
+  }
+});
+router.post("/:id/entries", (req, res) => {
+  const id: string | undefined = req.params.id;
+  if (!id) return res.status(400).json({ error: "malformatted parameter" });
+  const {
+    description,
+    date,
+    specialist,
+    diagnosisCodes,
+    healthCheckRating,
+    sickLeave,
+    discharge,
+  } = req.body;
+
+  const parsedEntry: Entry | null = utils.parseEntry(
+    description,
+    date,
+    specialist,
+    diagnosisCodes,
+    healthCheckRating,
+    sickLeave,
+    discharge
+  );
+  if (parsedEntry) {
+    const newPatientEntry = patientsService.addPatientEntry(id, parsedEntry);
+    return res.json(newPatientEntry);
+  } else {
+    return res.status(400).json({ error: "malformatted parameters" });
   }
 });
 

@@ -43,12 +43,14 @@ const addPatientEntry = (patientId: string, entry: Entry): Entry => {
     ...entry,
     id: uuid(),
   };
-  patients.map((p) => {
-    return p.id === patientId
-      ? { ...p, entries: [...p.entries, newPatientEntry] }
-      : p;
-  });
-
+  const patient = patients.find((p) => p.id === patientId);
+  if (patient) {
+    patients.splice(patients.indexOf(patient), 1);
+    patients.push({
+      ...patient,
+      entries: [...patient.entries, newPatientEntry],
+    });
+  }
   return newPatientEntry;
 };
 

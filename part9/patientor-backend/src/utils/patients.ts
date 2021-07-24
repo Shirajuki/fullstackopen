@@ -42,7 +42,9 @@ const parseEntry = (
   date: string,
   specialist: string,
   diagnosisCodes: Array<Diagnose["code"]>,
+  type: string,
   healthCheckRating: HealthCheckRating,
+  employerName: string,
   sickLeave: {
     startDate: string;
     endDate: string;
@@ -54,7 +56,7 @@ const parseEntry = (
 ): Entry | null => {
   if (isString(description) && isString(date) && isString(specialist)) {
     for (const code of diagnosisCodes) if (!isString(code)) return null;
-    if (healthCheckRating) {
+    if (type === "HealthCheck") {
       if (!Object.values(HealthCheckRating).includes(healthCheckRating))
         return null;
       const entry: HealthCheckEntry = {
@@ -67,9 +69,11 @@ const parseEntry = (
         healthCheckRating,
       };
       return entry;
-    } else if (sickLeave) {
-      if (!isString(sickLeave.endDate) && !isString(sickLeave.startDate))
-        return null;
+    } else if (employerName && type === "OccupationalHealthcare") {
+      if (!isString(employerName)) return null;
+      if (sickLeave)
+        if (!isString(sickLeave.endDate) && !isString(sickLeave.startDate))
+          return null;
       const entry: OccupationalHealthCareEntry = {
         id: "0",
         type: "OccupationalHealthcare",
@@ -77,10 +81,10 @@ const parseEntry = (
         date,
         specialist,
         diagnosisCodes: diagnosisCodes || [],
-        sickLeave,
+        employerName,
       };
-      return entry;
-    } else if (discharge) {
+      return sickLeave ? { ...entry, sickLeave } : entry;
+    } else if (discharge && type === "Hospital") {
       if (!isString(discharge.date) && !isString(discharge.criteria))
         return null;
       const entry: HospitalEntry = {

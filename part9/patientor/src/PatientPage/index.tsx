@@ -2,18 +2,28 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   Header,
+  Modal,
   Segment,
   Container,
   Divider,
   Table,
   Icon,
+  Button,
+  Grid,
 } from "semantic-ui-react";
-// import { PatientFormValues } from "../AddPatientModal/AddPatientForm";
-import { Patient, Entry, Diagnosis } from "../types";
+import { Field, Formik, Form } from "formik";
+import { Patient, Entry, EntryAll, Diagnosis } from "../types";
 import { apiBaseUrl } from "../constants";
 import HealthRatingBar from "../components/HealthRatingBar";
-import { useStateValue } from "../state";
+import { useStateValue, setDiagnosisList } from "../state";
 import { useParams } from "react-router";
+import {
+  DiagnosisSelection,
+  TextField,
+  NumberField,
+  SelectField,
+  TypeOption,
+} from "../AddPatientModal/FormField";
 
 const getGenderIcon = (gender: string): JSX.Element => {
   if (gender === "male") return <Icon name="mars" />;
@@ -107,16 +117,202 @@ const EntryDetails: React.FC<{ entry: Entry; diagnosis: Diagnosis[] }> = ({
       return <></>;
   }
 };
+const typeOption: TypeOption[] = [
+  { value: "Hospital", label: "Hospital" },
+  { value: "HealthCheck", label: "HealthCheck" },
+  { value: "OccupationalHealthcare", label: "OccupationalHealthcare" },
+];
+interface IProps {
+  modalOpen: boolean;
+  onClose: () => void;
+  onSubmit: (values: EntryAll) => void;
+  error?: string;
+}
+interface ErrorType {
+  [field: string]: ErrorType | string | undefined;
+  discharge?: ErrorType;
+  sickLeave?: ErrorType;
+}
+const AddEntryModal = ({ modalOpen, onClose, onSubmit, error }: IProps) => {
+  const [{ diagnoses }] = useStateValue();
+  return (
+    <Modal open={modalOpen} onClose={onClose} centered={false} closeIcon>
+      <Modal.Header>Add a new entry for patient</Modal.Header>
+      <Modal.Content>
+        {error && <Segment inverted color="red">{`Error: ${error}`}</Segment>}
+        <Formik
+          initialValues={{
+            description: "",
+            date: "",
+            specialist: "",
+            diagnosisCodes: [],
+            type: "HealthCheck",
+            healthCheckRating: 0,
+
+            discharge: { date: "", criteria: "" },
+
+            employerName: "",
+            sickLeave: { startDate: "", endDate: "" },
+          }}
+          onSubmit={onSubmit}
+          validate={(values) => {
+            const requiredError = "Field is required";
+            const errors: ErrorType = {};
+            if (values.description === "") errors.description = requiredError;
+            if (values.date === "") errors.date = requiredError;
+            if (values.specialist === "") errors.specialist = requiredError;
+            if (values.type === "HealthCheck") {
+              if (values.healthCheckRating < 0 || values.healthCheckRating > 3)
+                errors.healthCheckRating = requiredError;
+            } else if (values.type === "Hospital") {
+              errors.discharge = {};
+              if (values.discharge.date === "")
+                errors.discharge.date = requiredError;
+              if (values.discharge.criteria === "")
+                errors.discharge.criteria = requiredError;
+              if (
+                Object.values(errors).length === 1 &&
+                Object.values(errors.discharge).length === 0
+              )
+                return {};
+            } else if (values.type === "OccupationalHealthcare") {
+              errors.sickLeave = {};
+              if (values.employerName === "")
+                errors.employerName = requiredError;
+              if (values.sickLeave.startDate === "")
+                errors.sickLeave.startDate = requiredError;
+              if (values.sickLeave.endDate === "")
+                errors.sickLeave.endDate = requiredError;
+              if (
+                Object.values(errors).length === 1 &&
+                Object.values(errors.sickLeave).length === 0
+              )
+                return {};
+            }
+            return errors;
+          }}
+        >
+          {({ values, isValid, dirty, setFieldValue, setFieldTouched }) => {
+            return (
+              <Form className="form ui">
+                <Field
+                  label="Description"
+                  placeholder="Description"
+                  name="description"
+                  component={TextField}
+                />
+                <Field
+                  label="Date"
+                  placeholder="Date"
+                  name="date"
+                  component={TextField}
+                />
+                <Field
+                  label="Specialist"
+                  placeholder="Specialist"
+                  name="specialist"
+                  component={TextField}
+                />
+                <DiagnosisSelection
+                  setFieldValue={setFieldValue}
+                  setFieldTouched={setFieldTouched}
+                  diagnoses={Object.values(diagnoses)}
+                />
+                <SelectField label="Type" name="type" options={typeOption} />
+                {values.type === "HealthCheck" ? (
+                  <Field
+                    label="healthCheckRating"
+                    name="healthCheckRating"
+                    component={NumberField}
+                    min={0}
+                    max={3}
+                  />
+                ) : (
+                  <></>
+                )}
+                {values.type === "Hospital" ? (
+                  <>
+                    <Field
+                      label="Discharge date"
+                      placeholder="Discharge date"
+                      name="discharge.date"
+                      component={TextField}
+                    />
+                    <Field
+                      label="Discharge criteria"
+                      placeholder="Discharge criteria"
+                      name="discharge.criteria"
+                      component={TextField}
+                    />
+                  </>
+                ) : (
+                  <></>
+                )}
+                {values.type === "OccupationalHealthcare" ? (
+                  <>
+                    <Field
+                      label="Employer name"
+                      placeholder="Employer name"
+                      name="employerName"
+                      component={TextField}
+                    />
+                    <Field
+                      label="Sick leave start date"
+                      placeholder="Sick leave start date"
+                      name="sickLeave.startDate"
+                      value={values.sickLeave.startDate}
+                      component={TextField}
+                    />
+                    <Field
+                      label="Sick leave end date"
+                      placeholder="Sick leave start date"
+                      name="sickLeave.endDate"
+                      component={TextField}
+                    />
+                  </>
+                ) : (
+                  <></>
+                )}
+                <Grid>
+                  <Grid.Column floated="left" width={5}>
+                    <Button type="button" onClick={onClose} color="red">
+                      Cancel
+                    </Button>
+                  </Grid.Column>
+                  <Grid.Column floated="right" width={5}>
+                    <Button
+                      type="submit"
+                      floated="right"
+                      color="green"
+                      disabled={!dirty || !isValid}
+                    >
+                      Add
+                    </Button>
+                  </Grid.Column>
+                </Grid>
+              </Form>
+            );
+          }}
+        </Formik>
+      </Modal.Content>
+    </Modal>
+  );
+};
 const PatientPage: React.FC = () => {
-  const [, dispatch] = useStateValue();
-  const [error, setError] = React.useState<string | undefined>();
+  const [{ diagnoses: diagnosis }, dispatch] = useStateValue();
   const { id } = useParams<{ id: string }>();
+  const [error, setError] = React.useState<string | undefined>();
   const [patient, setPatient] = useState<Patient>();
-  const [diagnosis, setDiagnosis] = useState<Diagnosis[]>();
 
+  const [modalOpen, setModalOpen] = React.useState<boolean>(false);
+  const openModal = (): void => setModalOpen(true);
+  const [rerender, setRerender] = useState<boolean>(false);
+
+  const closeModal = (): void => {
+    setModalOpen(false);
+    setError(undefined);
+  };
   useEffect(() => {
-    void axios.get<void>(`${apiBaseUrl}/ping`);
-
     const fetchPatientList = async () => {
       try {
         const { data: patientFromApi } = await axios.get<Patient>(
@@ -129,13 +325,15 @@ const PatientPage: React.FC = () => {
       }
     };
     void fetchPatientList();
+  }, [dispatch, rerender]);
 
+  useEffect(() => {
     const fetchDiagnosis = async () => {
       try {
         const { data: diagnosis } = await axios.get<Diagnosis[]>(
           `${apiBaseUrl}/diagnoses`
         );
-        setDiagnosis(diagnosis);
+        dispatch(setDiagnosisList(diagnosis));
       } catch (e) {
         console.error(e);
         setError(JSON.stringify(e));
@@ -143,6 +341,21 @@ const PatientPage: React.FC = () => {
     };
     void fetchDiagnosis();
   }, [dispatch]);
+
+  const submitNewEntry = async (values: EntryAll) => {
+    try {
+      const { data: newEntry } = await axios.post<Entry>(
+        `${apiBaseUrl}/patients/${id}/entries`,
+        values
+      );
+      dispatch({ type: "ADD_ENTRY", payload: { id, entry: newEntry } });
+      closeModal();
+      setRerender(true);
+    } catch (e) {
+      console.error(e.response?.data || "Unknown Error");
+      setError(e.response?.data?.error || "Unknown error");
+    }
+  };
 
   if (!patient) return <></>;
   return (
@@ -172,10 +385,21 @@ const PatientPage: React.FC = () => {
           <EntryDetails
             key={entry.id}
             entry={entry}
-            diagnosis={diagnosis || []}
+            diagnosis={Object.values(diagnosis) || []}
           />
         ))}
       </Container>
+      <AddEntryModal
+        modalOpen={modalOpen}
+        onSubmit={submitNewEntry}
+        error={error}
+        onClose={closeModal}
+      />
+      <Divider />
+      <Button onClick={() => openModal()}>Add New Entry</Button>
+      <br />
+      <br />
+      <br />
     </div>
   );
 };

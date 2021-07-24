@@ -36,17 +36,22 @@ router.post("/:id/entries", (req, res) => {
     date,
     specialist,
     diagnosisCodes,
+    type,
     healthCheckRating,
+    employerName,
     sickLeave,
     discharge,
   } = req.body;
 
+  console.log(req.body);
   const parsedEntry: Entry | null = utils.parseEntry(
     description,
     date,
     specialist,
     diagnosisCodes,
+    type,
     healthCheckRating,
+    employerName,
     sickLeave,
     discharge
   );
